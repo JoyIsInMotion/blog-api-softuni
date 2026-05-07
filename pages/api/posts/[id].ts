@@ -3,6 +3,7 @@ import { posts } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { deleteFromR2 } from '@/lib/s3';
 
 export default async function handler(
   req: NextApiRequest,
@@ -71,11 +72,11 @@ async function updatePost(
     };
     const userId = decoded.userId;
 
-    const { title, contentHtml } = req.body;
-    if (!title && !contentHtml) {
+    const { title, contentHtml, coverImageUrl } = req.body;
+    if (!title && !contentHtml && coverImageUrl === undefined) {
       return res
         .status(400)
-        .json({ message: 'Title or content is required for update' });
+        .json({ message: 'Title, content, or coverImageUrl is required for update' });
     }
 
     const post = await db.query.posts.findFirst({
@@ -92,11 +93,24 @@ async function updatePost(
         .json({ message: 'You are not authorized to edit this post' });
     }
 
+    // Handle image deletion from R2 if coverImageUrl is being cleared
+    if (coverImageUrl === '' && post.coverImageUrl) {
+      try {
+        const url = new URL(post.coverImageUrl);
+        const key = url.pathname.substring(1); // Remove leading slash
+        await deleteFromR2(key);
+      } catch (imageError) {
+        console.error('Error deleting cover image:', imageError);
+        // Continue with post update even if image deletion fails
+      }
+    }
+
     const updatedPost = await db
       .update(posts)
       .set({
         title: title || post.title,
         contentHtml: contentHtml || post.contentHtml,
+        coverImageUrl: coverImageUrl !== undefined ? coverImageUrl : post.coverImageUrl,
       })
       .where(eq(posts.id, postId))
       .returning();
@@ -139,6 +153,19 @@ async function deletePost(
       return res
         .status(403)
         .json({ message: 'You are not authorized to delete this post' });
+    }
+
+    // Delete cover image from R2 if it exists
+    if (post.coverImageUrl) {
+      try {
+        // Extract the key from the URL
+        const url = new URL(post.coverImageUrl);
+        const key = url.pathname.substring(1); // Remove leading slash
+        await deleteFromR2(key);
+      } catch (imageError) {
+        console.error('Error deleting cover image:', imageError);
+        // Continue with post deletion even if image deletion fails
+      }
     }
 
     await db.delete(posts).where(eq(posts.id, postId));

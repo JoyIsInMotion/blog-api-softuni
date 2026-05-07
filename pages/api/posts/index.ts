@@ -55,7 +55,7 @@ async function createPost(req: NextApiRequest, res: NextApiResponse) {
     };
     const userId = decoded.userId;
 
-    const { title, contentHtml } = req.body;
+    const { title, contentHtml, coverImageUrl } = req.body;
     if (!title || !contentHtml) {
       return res
         .status(400)
@@ -64,7 +64,7 @@ async function createPost(req: NextApiRequest, res: NextApiResponse) {
 
     const newPost = await db
       .insert(posts)
-      .values({ title, contentHtml, authorId: userId })
+      .values({ title, contentHtml, authorId: userId, coverImageUrl })
       .returning();
 
     res.status(201).json(newPost[0]);

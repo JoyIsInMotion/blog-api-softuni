@@ -28,6 +28,7 @@ export const posts = pgTable('posts', {
     .references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   contentHtml: text('content_html').notNull(),
+  coverImageUrl: text('cover_image_url'),
   tags: text('tags').array(),
   publishedAt: timestamp('published_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

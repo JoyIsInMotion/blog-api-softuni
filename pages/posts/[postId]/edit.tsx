@@ -86,10 +86,12 @@ export default function EditPostPage() {
       title="Edit post"
       initialTitle={post.title}
       initialContent={stripHtml(post.contentHtml)}
+      initialCoverImageUrl={post.coverImageUrl}
       submitLabel="Save changes"
       loading={saving}
       error={saveError}
-      onSubmit={async ({ title, content }) => {
+      token={token}
+      onSubmit={async ({ title, content, coverImageUrl }) => {
         try {
           setSaving(true);
           setSaveError(null);
@@ -100,6 +102,7 @@ export default function EditPostPage() {
               body: JSON.stringify({
                 title,
                 contentHtml: htmlFromText(content),
+                coverImageUrl,
               }),
             },
             token

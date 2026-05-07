@@ -13,6 +13,7 @@ export type BlogPost = {
   authorId: number;
   title: string;
   contentHtml: string;
+  coverImageUrl: string | null;
   tags: string[] | null;
   publishedAt: string | null;
   createdAt: string;

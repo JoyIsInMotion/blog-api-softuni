@@ -33,7 +33,8 @@ export default function NewPostPage() {
       submitLabel="Publish"
       loading={loading}
       error={error}
-      onSubmit={async ({ title, content }) => {
+      token={token}
+      onSubmit={async ({ title, content, coverImageUrl }) => {
         try {
           setLoading(true);
           setError(null);
@@ -44,6 +45,7 @@ export default function NewPostPage() {
               body: JSON.stringify({
                 title,
                 contentHtml: htmlFromText(content),
+                coverImageUrl,
               }),
             },
             token

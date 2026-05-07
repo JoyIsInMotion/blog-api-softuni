@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import EmptyState from '@/components/EmptyState';
@@ -69,7 +70,18 @@ export default function PostDetailsPage() {
   const canEdit = Boolean(user && user.id === post.authorId && token);
 
   return (
-    <article className="space-y-6 rounded-[2rem] border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/20">
+    <article className="space-y-6 rounded-[2rem] border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/20 overflow-hidden">
+      {post.coverImageUrl && (
+        <div className="relative h-96 w-full -mx-8 -mt-8 mb-8 overflow-hidden rounded-t-[2rem]">
+          <Image
+            src={post.coverImageUrl}
+            alt={post.title}
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.3em] text-sky-300/80">
