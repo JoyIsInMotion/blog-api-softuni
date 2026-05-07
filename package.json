@@ -1,0 +1,28 @@
+{
+  "name": "blog-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:seed": "tsx db/seed.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "latest",
+    "bcrypt": "^6.0.0",
+    "drizzle-kit": "latest",
+    "drizzle-orm": "latest",
+    "neon": "^2.0.0",
+    "next": "latest",
+    "pg": "^8.20.0",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "tsx": "^4.21.0",
+    "typescript": "latest"
+  }
+}
