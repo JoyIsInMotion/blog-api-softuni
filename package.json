@@ -24,9 +24,13 @@
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
     "@types/node": "latest",
     "@types/react": "latest",
+    "autoprefixer": "^10.5.0",
     "dotenv": "^17.4.2",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^4.2.4",
     "tsx": "^4.21.0",
     "typescript": "latest"
   }

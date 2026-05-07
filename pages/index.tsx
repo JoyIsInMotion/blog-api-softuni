@@ -1,121 +1,108 @@
-import Head from 'next/head';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import EmptyState from '@/components/EmptyState';
+import ErrorState from '@/components/ErrorState';
+import LoadingState from '@/components/LoadingState';
+import Pagination from '@/components/Pagination';
+import PostCard from '@/components/PostCard';
+import { fetchJson } from '@/lib/blog';
+import { useAuth } from '@/hooks/useAuth';
+import type { BlogPostSummary } from '@/types/blog';
+
+const PAGE_SIZE = 6;
 
 export default function Home() {
+  const { user } = useAuth();
+  const [posts, setPosts] = useState<BlogPostSummary[]>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hasNext, setHasNext] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPosts() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchJson<BlogPostSummary[]>(
+          `/api/posts?page=${page}&limit=${PAGE_SIZE}`
+        );
+
+        if (active) {
+          setPosts(data);
+          setHasNext(data.length === PAGE_SIZE);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Unable to load posts');
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadPosts();
+
+    return () => {
+      active = false;
+    };
+  }, [page, refreshTick]);
+
   return (
-    <div className="container">
-      <Head>
-        <title>Blog API</title>
-        <meta name="description" content="Blog API documentation" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className="main">
-        <h1 className="title">Blog API</h1>
-
-        <p className="description">
-          Welcome to the Blog API. Here are the available endpoints:
-        </p>
-
-        <div className="grid">
-          <div className="card">
-            <h2>Public Endpoints</h2>
-            <p>No authentication required.</p>
-            <ul>
-              <li>
-                <code>POST /api/auth/register</code> - Register a new user.
-              </li>
-              <li>
-                <code>POST /api/auth/login</code> - Login a user.
-              </li>
-              <li>
-                <code>GET /api/posts</code> - Get all posts (paginated).
-              </li>
-              <li>
-                <code>GET /api/posts/:id</code> - Get a single post by ID.
-              </li>
-            </ul>
-          </div>
-
-          <div className="card">
-            <h2>Protected Endpoints</h2>
-            <p>Requires JWT authentication.</p>
-            <ul>
-              <li>
-                <code>GET /api/auth/me</code> - Get the current user.
-              </li>
-              <li>
-                <code>POST /api/posts</code> - Create a new post.
-              </li>
-              <li>
-                <code>PATCH /api/posts/:id</code> - Update a post by ID.
-              </li>
-              <li>
-                <code>DELETE /api/posts/:id</code> - Delete a post by ID.
-              </li>
-            </ul>
-          </div>
+    <div className="space-y-8">
+      <section className="rounded-[2rem] border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/20">
+        <div className="max-w-3xl space-y-4">
+          <p className="text-sm uppercase tracking-[0.3em] text-sky-300/80">Blog System</p>
+          <h1 className="text-4xl font-bold text-white sm:text-5xl">
+            Read, write, and manage posts in one simple space.
+          </h1>
+          <p className="text-base leading-7 text-slate-300 sm:text-lg">
+            Browse paginated public posts, open full details, and sign in to create,
+            edit, or delete your own articles.
+          </p>
         </div>
-      </main>
+        {!user ? (
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/register" className="rounded-full bg-sky-500 px-5 py-3 font-medium text-white transition hover:bg-sky-400">
+              Create account
+            </Link>
+            <Link href="/login" className="rounded-full border border-white/10 px-5 py-3 font-medium text-white transition hover:bg-white/5">
+              Login
+            </Link>
+          </div>
+        ) : null}
+      </section>
 
-      <style jsx>{`
-        .container {
-          padding: 0 2rem;
-        }
-        .main {
-          min-height: 100vh;
-          padding: 4rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-        .title {
-          margin: 0;
-          line-height: 1.15;
-          font-size: 4rem;
-        }
-        .description {
-          margin: 4rem 0;
-          line-height: 1.5;
-          font-size: 1.5rem;
-        }
-        .grid {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-wrap: wrap;
-          max-width: 800px;
-        }
-        .card {
-          margin: 1rem;
-          padding: 1.5rem;
-          text-align: left;
-          color: inherit;
-          text-decoration: none;
-          border: 1px solid #eaeaea;
-          border-radius: 10px;
-          transition: color 0.15s ease, border-color 0.15s ease;
-          width: 100%;
-        }
-        .card h2 {
-          margin: 0 0 1rem 0;
-          font-size: 1.5rem;
-        }
-        .card p {
-          margin: 0;
-          font-size: 1.25rem;
-          line-height: 1.5;
-        }
-        code {
-          background: #fafafa;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family: Menlo, Monaco, Lucida Console, Liberation Mono,
-            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-        }
-      `}</style>
+      {loading ? (
+        <LoadingState label="Loading posts" />
+      ) : error ? (
+        <ErrorState message={error} onRetry={() => setRefreshTick((current) => current + 1)} />
+      ) : posts.length ? (
+        <>
+          <div className="grid gap-5">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+          <Pagination
+            page={page}
+            hasPrevious={page > 1}
+            hasNext={hasNext}
+            onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+            onNext={() => setPage((current) => current + 1)}
+          />
+        </>
+      ) : (
+        <EmptyState
+          title="No posts yet"
+          message="Be the first to publish something interesting."
+        />
+      )}
     </div>
   );
 }
