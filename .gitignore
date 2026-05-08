@@ -16,3 +16,8 @@ npm-debug.log*
 .DS_Store
 .idea/
 *.log
+
+# Playwright
+playwright-report/
+test-results/
+tsconfig.tsbuildinfo

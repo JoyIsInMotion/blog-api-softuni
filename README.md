@@ -265,6 +265,18 @@ npm run db:seed
 # Push schema changes to database
 npm run db:push
 
+# Run integration tests against TEST_DATABASE_URL
+npm run test:integration
+
+# Run Playwright E2E tests (headless)
+npm run test:e2e
+
+# Run Playwright E2E tests with browser visible
+npm run test:e2e -- --headed
+
+# Open Playwright interactive UI
+npm run test:e2e:ui
+
 # Generate TypeScript types from schema
 npm run db:generate
 ```
@@ -274,12 +286,42 @@ npm run db:generate
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `DATABASE_URL` | Neon PostgreSQL connection string | `postgresql://...` |
+| `TEST_DATABASE_URL` | Neon PostgreSQL connection string for integration tests | `postgresql://...` |
 | `JWT_SECRET` | Secret key for signing JWT tokens | `your-secret` |
 | `R2_ACCESS_KEY_ID` | Cloudflare R2 access key | `abc123...` |
 | `R2_SECRET_ACCESS_KEY` | Cloudflare R2 secret key | `xyz789...` |
 | `R2_URL` | Cloudflare R2 API endpoint | `https://xxx.r2.cloudflarestorage.com` |
 | `R2_BUCKET` | Cloudflare R2 bucket name | `my-blog-bucket` |
 | `R2_PUBLIC_URL` | Public R2 URL for accessing images | `https://cdn.example.com` |
+
+### Integration Test Workflow
+
+The integration suite uses the real API over HTTP and a dedicated Neon test database.
+The runner will apply Drizzle migrations, empty the application tables, seed test data,
+start the local Next.js server, and then run Jest integration tests.
+
+The suite covers the main blog API flows: register, login, profile lookup, list, view,
+create, edit, delete, and non-owner forbidden access.
+
+### E2E Test Workflow (Playwright)
+
+End-to-end tests run against a real browser and a dedicated `TEST_DATABASE_URL` database.
+Before each run, `tests/e2e/global-setup.ts` drops and recreates the `users`/`posts` tables
+and seeds two test users (`steve@gmail.com` and `maria@gmail.com`, password `pass123`) plus
+10 posts. The dev server starts automatically on **port 3003** so it does not conflict with a
+running development server on port 3000.
+
+**Covered scenarios:**
+- Home page renders exactly `PAGE_SIZE` (6) post cards
+- Register a new account → session is active immediately
+- Login with existing credentials → session is active
+- Owner can create, edit, and delete their own post
+- Non-owner cannot see Edit / Delete controls on someone else's post
+
+First-time setup:
+```bash
+npx playwright install chromium
+```
 
 ## Building & Deployment
 

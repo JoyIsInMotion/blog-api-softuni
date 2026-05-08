@@ -1,1 +1,1 @@
-ALTER TABLE "posts" ADD COLUMN "cover_image_url" text;
+ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "cover_image_url" text;

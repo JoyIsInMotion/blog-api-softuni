@@ -1,6 +1,7 @@
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { hash } from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -31,9 +32,23 @@ export default async function handler(
         createdAt: users.createdAt,
       });
 
-    res.status(201).json(newUser[0]);
+    const token = jwt.sign(
+      { userId: newUser[0].id },
+      process.env.JWT_SECRET!,
+      { expiresIn: '1h' },
+    );
+
+    res.status(201).json({ token });
   } catch (error) {
     console.error(error);
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code: string }).code === '23505'
+    ) {
+      return res.status(409).json({ message: 'Email already in use' });
+    }
     res.status(500).json({ message: 'Internal Server Error' });
   }
 }
